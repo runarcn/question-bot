@@ -1,7 +1,8 @@
 # Question of the Week discord bot for the r/traa discord
-See /src for all the relevant code
+This bot is still in development, however it is currently fully functional if you only want two random questions each time the /qotw command is called.
 
-The database used is questions.json
+* See /src for all the relevant code
+* The database used is questions.json
 
 
 ## How to use
