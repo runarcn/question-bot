@@ -17,9 +17,6 @@ client.on('ready', (c) => {
     console.log(`${c.user.tag} is online.`);
 });
 
-const database = getQuestions();
-const transQuestion = database.transQuestions
-const generalQuestion = database.generalQuestions
 
 // Function to read questions from the database
 function getQuestions() {
@@ -27,24 +24,47 @@ function getQuestions() {
     const database = JSON.parse(dbData);
     return database;
 }
+const database = getQuestions();
+const transQuestion = database.transQuestions
+const generalQuestion = database.generalQuestions
 
+// Send QotW function
+function sendMessage() {
+    // Selects random trans question
+    const randomTransIndex = Math.floor(Math.random() * transQuestion.length); 
+    const randomTransQuestion = transQuestion[randomTransIndex].question;
+    // Selects random general question
+    const randomGeneralIndex = Math.floor(Math.random() * generalQuestion.length); 
+    const randomGeneralQuestion = generalQuestion[randomGeneralIndex].question;
+    // Sends message to preferred channel
+    const channelId = process.env.CHANNEL_ID;
+    const channel = client.channels.cache.get(channelId);
+    if (channel) {
+        channel.send(`This weeks general question is: ${randomGeneralQuestion} \nThis weeks trans-related question is: ${randomTransQuestion}`);
+    }
+}
+
+// Schedule QotW
+function questionScheduler() {
+    const dayInMS = 24 * 60 * 60 * 1000; // 24 hours
+    const weekInMS = 7 * dayInMS; // 1 week
+    // const fourSeconds = 4 * 1000 // Used for testing
+    setInterval(sendMessage, weekInMS);
+    // setInterval(sendMessage, fourSeconds); // Used for testing
+}
+ 
 // Commands
 client.on('interactionCreate', (interaction) => {
     if (!interaction.isChatInputCommand()) return;
 
     // Question of the Week-command
     if(interaction.commandName === 'qotw') {
-        // Selects random trans question
-        const randomTransIndex = Math.floor(Math.random() * transQueston.length); 
-        const randomTransQuestion = transQuestion[randomTransIndex].question;
-        // Selects random general question
-        const randomGeneralIndex = Math.floor(Math.random() * generalQuestion.length); 
-        const randomGeneralQuestion = generalQuestion[randomGeneralIndex].question;
-        // Replies
-        interaction.reply(`This weeks general question is: ${randomGeneralQuestion} \nThis weeks trans-related question is: ${randomTransQuestion}`);
+        sendMessage();
+        questionScheduler();
+        interaction.reply("Bot initialized.");
     };
 
-    // Add questions to database from Discord
+    // Add questions to database from Discord-command
     if(interaction.commandName === 'add') {
         const type = interaction.options.get('type').value;
         const question = interaction.options.get('question').value;
@@ -56,7 +76,7 @@ client.on('interactionCreate', (interaction) => {
         };
         const updatedData = JSON.stringify(database);
         fs.writeFileSync('questions.json', updatedData, 'utf8');
-        interaction.followUp("Added `" + question + "` to the `" + type + "` database.")
+        interaction.reply("Added `" + question + "` to the `" + type + "` database.")
     };
 });
 
